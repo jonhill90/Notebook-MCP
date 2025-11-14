@@ -1,0 +1,82 @@
+# Docker Compose Configuration for MCP Second Brain Server
+# Version: 1.0.0
+#
+# Services:
+# - mcp-server: Convention-enforcing MCP server for Second Brain vault
+# - qdrant: Qdrant vector database for semantic search
+#
+# Usage:
+#   docker compose up -d              # Start all services
+#   docker compose ps                 # Check service health
+#   docker compose logs -f mcp-server # View MCP server logs
+#   docker compose down               # Stop all services
+#   docker compose down -v            # Stop and remove volumes
+
+version: '3.8'
+
+services:
+  # MCP Second Brain Server
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: second-brain-mcp
+    ports:
+      - "${MCP_PORT:-8053}:8053"  # MCP server port
+    volumes:
+      # Mount Second Brain vault (read-write for note creation)
+      - ../repos/Second Brain:/vault:rw
+      # Mount source code for development hot reload
+      - ./src:/app/src:ro
+      # Mount config files
+      - ./config:/app/config:ro
+    environment:
+      # Vault configuration
+      VAULT_PATH: /vault
+
+      # Qdrant configuration (internal Docker network address)
+      QDRANT_URL: http://qdrant:6333
+
+      # OpenAI API key (for embeddings)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      # Server configuration
+      MCP_PORT: ${MCP_PORT:-8053}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    networks:
+      - vibes-network
+    depends_on:
+      - qdrant
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8053/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Qdrant Vector Database Service
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: second-brain-qdrant
+    ports:
+      - "${QDRANT_PORT:-6334}:6333"  # REST API (offset to 6334 for host access)
+    volumes:
+      - qdrant-storage:/qdrant/storage
+    networks:
+      - vibes-network
+    # Healthcheck disabled - Qdrant container lacks wget/curl
+    # Service is healthy when it starts (verified by logs)
+    restart: unless-stopped
+
+# Named Volumes for Data Persistence
+volumes:
+  qdrant-storage:
+    name: second_brain_qdrant_data
+    driver: local
+
+# Network Configuration
+# Uses external vibes-network for integration with other services
+networks:
+  vibes-network:
+    external: true
