@@ -25,7 +25,7 @@ services:
       - "${MCP_PORT:-8053}:8053"  # MCP server port
     volumes:
       # Mount Second Brain vault (read-write for note creation)
-      - ../repos/Second Brain:/vault:rw
+      - /Users/jon/source/Second Brain:/vault:rw
       # Mount source code for development hot reload
       - ./src:/app/src:ro
       # Mount config files

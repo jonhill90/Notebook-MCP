@@ -59,13 +59,34 @@ class VaultManager:
     # Valid folder structure for Second Brain
     # Maps folder names to allowed note types in that folder
     VALID_FOLDERS: dict[str, list[str]] = {
-        "00 - Inbox": ["clipping", "thought", "todo"],
-        "01 - Notes": ["note", "reference"],
+        # Inbox subfolders
+        "00 - Inbox/00a - Active": ["thought", "todo"],
+        "00 - Inbox/00b - Backlog": ["thought", "todo"],
+        "00 - Inbox/00c - Clippings": ["clipping"],
+        "00 - Inbox/00d - Documents": ["clipping", "resource"],
+        "00 - Inbox/00e - Excalidraw": ["clipping"],
+        "00 - Inbox/00r - Research": ["thought", "note"],
+        "00 - Inbox/00t - Thoughts": ["thought"],
+        "00 - Inbox/00v - Video": ["clipping"],
+        # Notes subfolders
+        "01 - Notes/01a - Atomic": ["note"],
+        "01 - Notes/01m - Meetings": ["note"],
+        "01 - Notes/01r - Research": ["note"],
+        # MOCs
         "02 - MOCs": ["moc"],
-        "03 - Projects": ["project"],
+        # Projects subfolders
+        "03 - Projects/03b - Personal": ["project"],
+        "03 - Projects/03c - Work": ["project"],
+        "03 - Projects/03p - PRPs": ["note"],  # PRPs stored as notes
+        # Areas
         "04 - Areas": ["area"],
-        "05 - Resources": ["resource"],
-        "05c - Clippings": ["clipping"],
+        # Resources subfolders
+        "05 - Resources/05c - Clippings": ["clipping"],
+        "05 - Resources/05d - Documents": ["resource"],
+        "05 - Resources/05e - Examples": ["resource"],
+        "05 - Resources/05l - Learning": ["resource", "clipping"],
+        "05 - Resources/05r - Repos": ["resource"],
+        "05 - Resources/05v - Video": ["clipping"],
     }
 
     def __init__(self, vault_path: str):
@@ -344,12 +365,12 @@ class VaultManager:
             >>> print(note['frontmatter']['title'])
             'My Note'
         """
-        # Search all folders for the note
+        # Search all folders recursively for the note
         for folder in self.valid_folders.keys():
             folder_path = self.vault_path / folder
-            file_path = folder_path / f"{note_id}.md"
 
-            if file_path.exists():
+            # Search recursively in subfolders
+            for file_path in folder_path.rglob(f"{note_id}.md"):
                 # Parse frontmatter
                 post = frontmatter.load(file_path)
 

@@ -86,7 +86,9 @@ class TagAnalyzer:
             try:
                 post = frontmatter.load(md_file)
                 if 'tags' in post.metadata and isinstance(post.metadata['tags'], list):
-                    tags.update(post.metadata['tags'])
+                    for tag in post.metadata['tags']:
+                        if isinstance(tag, str):
+                            tags.add(tag)
             except Exception as e:
                 error_count += 1
                 logger.warning(f"Error parsing {md_file}: {e}")
