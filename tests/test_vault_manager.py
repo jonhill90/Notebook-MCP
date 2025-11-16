@@ -21,22 +21,38 @@ from src.vault.manager import VaultManager
 
 @pytest.fixture
 def temp_vault():
-    """Create a temporary vault for testing."""
+    """Create a temporary vault for testing with full 3-level structure."""
     temp_dir = tempfile.mkdtemp()
     vault_path = Path(temp_dir) / "test_vault"
     vault_path.mkdir()
 
-    # Create folder structure
+    # Create full 3-level folder structure matching VaultManager.VALID_FOLDERS
     folders = [
-        "00 - Inbox",
-        "01 - Notes",
+        "00 - Inbox/00a - Active",
+        "00 - Inbox/00b - Backlog",
+        "00 - Inbox/00c - Clippings",
+        "00 - Inbox/00d - Documents",
+        "00 - Inbox/00e - Excalidraw",
+        "00 - Inbox/00r - Research",
+        "00 - Inbox/00t - Thoughts",
+        "00 - Inbox/00v - Video",
+        "01 - Notes/01a - Atomic",
+        "01 - Notes/01m - Meetings",
+        "01 - Notes/01r - Research",
         "02 - MOCs",
-        "03 - Projects",
+        "03 - Projects/03b - Personal",
+        "03 - Projects/03c - Work",
+        "03 - Projects/03p - PRPs",
         "04 - Areas",
-        "05 - Resources",
+        "05 - Resources/05c - Clippings",
+        "05 - Resources/05d - Documents",
+        "05 - Resources/05e - Examples",
+        "05 - Resources/05l - Learning",
+        "05 - Resources/05r - Repos",
+        "05 - Resources/05v - Video",
     ]
     for folder in folders:
-        (vault_path / folder).mkdir()
+        (vault_path / folder).mkdir(parents=True, exist_ok=True)
 
     yield vault_path
 
@@ -102,7 +118,7 @@ class TestIDGeneration:
         first_id = vault_manager.generate_id()
 
         # Create the file manually to simulate collision
-        folder_path = temp_vault / "01 - Notes"
+        folder_path = temp_vault / "01 - Notes/01a - Atomic"
         (folder_path / f"{first_id}.md").touch()
 
         # This should detect the collision and generate a new ID
@@ -133,13 +149,14 @@ class TestFolderTypeValidation:
     def test_validate_valid_combinations(self, vault_manager):
         """Test that valid folder/type combinations pass."""
         valid_combos = [
-            ("00 - Inbox", "clipping"),
-            ("00 - Inbox", "thought"),
-            ("01 - Notes", "note"),
+            ("00 - Inbox/00c - Clippings", "clipping"),
+            ("00 - Inbox/00t - Thoughts", "thought"),
+            ("01 - Notes/01a - Atomic", "note"),
             ("02 - MOCs", "moc"),
-            ("03 - Projects", "project"),
+            ("03 - Projects/03b - Personal", "project"),
             ("04 - Areas", "area"),
-            ("05 - Resources", "resource"),
+            ("05 - Resources/05d - Documents", "resource"),
+            ("05 - Resources/05e - Examples", "resource"),
         ]
 
         for folder, note_type in valid_combos:
@@ -153,7 +170,7 @@ class TestFolderTypeValidation:
     def test_validate_invalid_type_for_folder(self, vault_manager):
         """Test that invalid type for folder raises error."""
         with pytest.raises(ValueError, match="not allowed in folder"):
-            vault_manager.validate_folder_type("01 - Notes", "moc")
+            vault_manager.validate_folder_type("01 - Notes/01a - Atomic", "moc")
 
         with pytest.raises(ValueError, match="not allowed in folder"):
             vault_manager.validate_folder_type("02 - MOCs", "note")
@@ -217,7 +234,7 @@ class TestCreateNote:
         file_path = await vault_manager.create_note(
             title="Test Note",
             content="This is test content.",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["test", "example"],
         )
@@ -246,7 +263,7 @@ class TestCreateNote:
         file_path = await vault_manager.create_note(
             title="Tag Test",
             content="Testing tag normalization",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["Python Programming", "AI & ML", "web_dev"],
         )
@@ -266,7 +283,7 @@ class TestCreateNote:
             await vault_manager.create_note(
                 title="Invalid Note",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="moc",  # MOC not allowed in Notes folder
                 tags=["test"],
             )
@@ -277,7 +294,7 @@ class TestCreateNote:
         file_path = await vault_manager.create_note(
             title="Project Note",
             content="Project content",
-            folder="03 - Projects",
+            folder="03 - Projects/03b - Personal",
             note_type="project",
             tags=["project"],
             status="in-progress",
@@ -292,7 +309,7 @@ class TestCreateNote:
         file_path = await vault_manager.create_note(
             title="Dry Run Test",
             content="This should not be created",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["test"],
             dry_run=True,
@@ -332,7 +349,7 @@ class TestReadNote:
         file_path = await vault_manager.create_note(
             title="Read Test",
             content="Content to read",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["test"],
         )
@@ -365,7 +382,7 @@ class TestUpdateNote:
         file_path = await vault_manager.create_note(
             title="Update Test",
             content="Original content",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["test"],
         )
@@ -390,7 +407,7 @@ class TestUpdateNote:
         file_path = await vault_manager.create_note(
             title="Tag Update Test",
             content="Content",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["old-tag"],
         )
@@ -416,7 +433,7 @@ class TestUpdateNote:
         file_path = await vault_manager.create_note(
             title="Project Update",
             content="Content",
-            folder="03 - Projects",
+            folder="03 - Projects/03b - Personal",
             note_type="project",
             tags=["project"],
             status="planning",
@@ -451,7 +468,7 @@ class TestUpdateNote:
         file_path = await vault_manager.create_note(
             title="Dry Run Update",
             content="Original content",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["test"],
         )
@@ -481,7 +498,7 @@ class TestDeleteNote:
         file_path = await vault_manager.create_note(
             title="Delete Test",
             content="Content",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["test"],
         )
@@ -510,7 +527,7 @@ class TestDeleteNote:
         file_path = await vault_manager.create_note(
             title="Dry Run Delete",
             content="Content",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["test"],
         )
@@ -532,10 +549,10 @@ class TestListNotes:
         """Test listing all notes."""
         # Create several notes
         await vault_manager.create_note(
-            "Note 1", "Content 1", "01 - Notes", "note", ["test"]
+            "Note 1", "Content 1", "01 - Notes/01a - Atomic", "note", ["test"]
         )
         await vault_manager.create_note(
-            "Note 2", "Content 2", "01 - Notes", "note", ["test"]
+            "Note 2", "Content 2", "01 - Notes/01a - Atomic", "note", ["test"]
         )
         await vault_manager.create_note(
             "MOC 1", "MOC Content", "02 - MOCs", "moc", ["test"]
@@ -550,14 +567,14 @@ class TestListNotes:
         """Test listing notes filtered by folder."""
         # Create notes in different folders
         await vault_manager.create_note(
-            "Note 1", "Content", "01 - Notes", "note", ["test"]
+            "Note 1", "Content", "01 - Notes/01a - Atomic", "note", ["test"]
         )
         await vault_manager.create_note(
             "MOC 1", "Content", "02 - MOCs", "moc", ["test"]
         )
 
         # List only Notes folder
-        notes = await vault_manager.list_notes(folder="01 - Notes")
+        notes = await vault_manager.list_notes(folder="01 - Notes/01a - Atomic")
         assert len(notes) == 1
         assert notes[0]['type'] == "note"
 
@@ -566,10 +583,10 @@ class TestListNotes:
         """Test listing notes filtered by type."""
         # Create different types
         await vault_manager.create_note(
-            "Note 1", "Content", "01 - Notes", "note", ["test"]
+            "Note 1", "Content", "01 - Notes/01a - Atomic", "note", ["test"]
         )
         await vault_manager.create_note(
-            "Note 2", "Content", "01 - Notes", "note", ["test"]
+            "Note 2", "Content", "01 - Notes/01a - Atomic", "note", ["test"]
         )
         await vault_manager.create_note(
             "MOC 1", "Content", "02 - MOCs", "moc", ["test"]
@@ -585,10 +602,10 @@ class TestListNotes:
         """Test listing notes filtered by tag."""
         # Create notes with different tags
         await vault_manager.create_note(
-            "Note 1", "Content", "01 - Notes", "note", ["python", "test"]
+            "Note 1", "Content", "01 - Notes/01a - Atomic", "note", ["python", "test"]
         )
         await vault_manager.create_note(
-            "Note 2", "Content", "01 - Notes", "note", ["javascript", "test"]
+            "Note 2", "Content", "01 - Notes/01a - Atomic", "note", ["javascript", "test"]
         )
 
         # List only python-tagged notes

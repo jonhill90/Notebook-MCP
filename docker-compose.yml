@@ -1,31 +1,33 @@
-# Docker Compose Configuration for MCP Second Brain Server
+# Docker Compose Configuration for Notebook Stack
 # Version: 1.0.0
 #
+# Stack Name: notebook
 # Services:
-# - mcp-server: Convention-enforcing MCP server for Second Brain vault
+# - notebook-mcp: Convention-enforcing MCP server for Second Brain vault
 # - qdrant: Qdrant vector database for semantic search
 #
 # Usage:
-#   docker compose up -d              # Start all services
-#   docker compose ps                 # Check service health
-#   docker compose logs -f mcp-server # View MCP server logs
-#   docker compose down               # Stop all services
-#   docker compose down -v            # Stop and remove volumes
+#   docker compose up -d                  # Start all services
+#   docker compose ps                     # Check service health
+#   docker compose logs -f notebook-mcp   # View MCP server logs
+#   docker compose down                   # Stop all services
+#   docker compose down -v                # Stop and remove volumes
 
-version: '3.8'
+# Stack name configuration
+name: notebook
 
 services:
   # MCP Second Brain Server
-  mcp-server:
+  notebook-mcp:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: second-brain-mcp
+    container_name: notebook-mcp
     ports:
       - "${MCP_PORT:-8053}:8053"  # MCP server port
     volumes:
       # Mount Second Brain vault (read-write for note creation)
-      - /Users/jon/source/Second Brain:/vault:rw
+      - ./vault/Second Brain:/vault:rw
       # Mount source code for development hot reload
       - ./src:/app/src:ro
       # Mount config files
@@ -44,7 +46,7 @@ services:
       MCP_PORT: ${MCP_PORT:-8053}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     networks:
-      - vibes-network
+      - notebook-network
     depends_on:
       - qdrant
     healthcheck:
@@ -58,13 +60,13 @@ services:
   # Qdrant Vector Database Service
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: second-brain-qdrant
+    container_name: notebook-qdrant
     ports:
       - "${QDRANT_PORT:-6334}:6333"  # REST API (offset to 6334 for host access)
     volumes:
       - qdrant-storage:/qdrant/storage
     networks:
-      - vibes-network
+      - notebook-network
     # Healthcheck disabled - Qdrant container lacks wget/curl
     # Service is healthy when it starts (verified by logs)
     restart: unless-stopped
@@ -72,11 +74,12 @@ services:
 # Named Volumes for Data Persistence
 volumes:
   qdrant-storage:
-    name: second_brain_qdrant_data
+    name: notebook_qdrant_data
     driver: local
 
 # Network Configuration
-# Uses external vibes-network for integration with other services
+# Dedicated network for notebook stack services
 networks:
-  vibes-network:
-    external: true
+  notebook-network:
+    name: notebook-network
+    driver: bridge

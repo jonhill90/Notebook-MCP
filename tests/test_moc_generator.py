@@ -21,22 +21,38 @@ from src.vault.manager import VaultManager
 
 @pytest.fixture
 def temp_vault():
-    """Create a temporary vault for testing."""
+    """Create a temporary vault for testing with full 3-level structure."""
     temp_dir = tempfile.mkdtemp()
     vault_path = Path(temp_dir) / "test_vault"
     vault_path.mkdir()
 
-    # Create folder structure
+    # Create full 3-level folder structure matching VaultManager.VALID_FOLDERS
     folders = [
-        "00 - Inbox",
-        "01 - Notes",
+        "00 - Inbox/00a - Active",
+        "00 - Inbox/00b - Backlog",
+        "00 - Inbox/00c - Clippings",
+        "00 - Inbox/00d - Documents",
+        "00 - Inbox/00e - Excalidraw",
+        "00 - Inbox/00r - Research",
+        "00 - Inbox/00t - Thoughts",
+        "00 - Inbox/00v - Video",
+        "01 - Notes/01a - Atomic",
+        "01 - Notes/01m - Meetings",
+        "01 - Notes/01r - Research",
         "02 - MOCs",
-        "03 - Projects",
+        "03 - Projects/03b - Personal",
+        "03 - Projects/03c - Work",
+        "03 - Projects/03p - PRPs",
         "04 - Areas",
-        "05 - Resources",
+        "05 - Resources/05c - Clippings",
+        "05 - Resources/05d - Documents",
+        "05 - Resources/05e - Examples",
+        "05 - Resources/05l - Learning",
+        "05 - Resources/05r - Repos",
+        "05 - Resources/05v - Video",
     ]
     for folder in folders:
-        (vault_path / folder).mkdir()
+        (vault_path / folder).mkdir(parents=True, exist_ok=True)
 
     yield vault_path
 
@@ -101,7 +117,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content=f"Content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -119,7 +135,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content=f"Content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -140,7 +156,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content=f"Content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -161,7 +177,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"Python Note {i}",
                 content=f"Python content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -171,7 +187,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"JS Note {i}",
                 content=f"JavaScript content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["javascript"],
             )
@@ -181,7 +197,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"Rust Note {i}",
                 content=f"Rust content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["rust"],
             )
@@ -211,7 +227,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content=f"Content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python", "web-dev"],
             )
@@ -237,7 +253,7 @@ class TestFindClusters:
             await vault_manager.create_note(
                 title=f"Tagged Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -267,7 +283,7 @@ class TestCreateMOC:
             file_path = await vault_manager.create_note(
                 title=f"Python Note {i}",
                 content=f"Content {i}",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -315,7 +331,7 @@ class TestCreateMOC:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["machine-learning"],
             )
@@ -338,7 +354,7 @@ class TestCreateMOC:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -363,7 +379,7 @@ class TestCreateMOC:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -390,7 +406,7 @@ class TestCreateMOC:
             file_path = await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -421,7 +437,7 @@ class TestCheckMOCNeeded:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -441,7 +457,7 @@ class TestCheckMOCNeeded:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -458,7 +474,7 @@ class TestCheckMOCNeeded:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -479,7 +495,7 @@ class TestCreateAllNeededMOCs:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -496,7 +512,7 @@ class TestCreateAllNeededMOCs:
             await vault_manager.create_note(
                 title=f"Python Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -506,7 +522,7 @@ class TestCreateAllNeededMOCs:
             await vault_manager.create_note(
                 title=f"JS Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["javascript"],
             )
@@ -516,7 +532,7 @@ class TestCreateAllNeededMOCs:
             await vault_manager.create_note(
                 title=f"Rust Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["rust"],
             )
@@ -539,7 +555,7 @@ class TestCreateAllNeededMOCs:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -568,7 +584,7 @@ class TestEdgeCases:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
@@ -587,7 +603,7 @@ class TestEdgeCases:
             await vault_manager.create_note(
                 title=f"Note {i}",
                 content="Content",
-                folder="01 - Notes",
+                folder="01 - Notes/01a - Atomic",
                 note_type="note",
                 tags=["python"],
             )
