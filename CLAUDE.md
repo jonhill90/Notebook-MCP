@@ -2,6 +2,43 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL: Vault Separation (READ THIS FIRST!)
+
+There are **TWO SEPARATE VAULT SYSTEMS** in this project. Understanding this distinction is critical:
+
+### Production Vault (Real Notebook)
+- **Access Method**: Only via `mcp__basic-memory__*` MCP tools
+- **Location**: Managed by basic-memory MCP server (NOT in this repository)
+- **Purpose**: User's REAL personal knowledge base
+- **IMPORTANT**: Only edit when user explicitly asks
+- **Available Tools**:
+  - `mcp__basic-memory__read_note` - Read notes by ID/permalink
+  - `mcp__basic-memory__edit_note` - Edit existing notes
+  - `mcp__basic-memory__write_note` - Create new notes
+  - `mcp__basic-memory__search_notes` - Search knowledge base
+  - `mcp__basic-memory__view_note` - View formatted notes
+
+### Test Vaults (In Repository)
+- **Location 1**: `./vault/Second Brain/` - Working test copy for development
+- **Location 2**: `./vault/Second Brain - Copy/` - Pristine backup for restoration
+- **Purpose**: Used by pytest, Docker, and local development
+- **Safe to modify freely** - These are test copies
+- **Accessed By**: Python code (VaultManager), test suite, Docker containers
+
+### Golden Rule
+- **basic-memory MCP tools** = Production vault (user's real data - be careful!)
+- **./vault/ directories** = Test copies (safe to modify during development)
+- **NEVER confuse the two systems**
+- **NEVER use basic-memory tools for testing or development work**
+- **ALWAYS use basic-memory tools to update project progress notes**
+
+### When to Use Basic-Memory Tools
+- Updating project tracking notes (e.g., `03-projects/03b-personal/project-personal-notebook-mcp`)
+- Updating session handoff notes (e.g., `01-notes/01r-research/202511152142`)
+- Reading research notes from user's vault for context
+- When user explicitly asks to create/edit notes in their real vault
+- Follow tagging guide: `~/source/vibes/.vibes/user-config/basic-memory-tagging-guide.md`
+
 ## Project Overview
 
 **Personal Notebook MCP Server** - A Model Context Protocol (MCP) server that enforces Second Brain conventions for Obsidian vault management with auto-tagging, semantic search, and intelligent inbox processing.
