@@ -201,7 +201,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05 - Resources", "Documentation should route to Resources"
+        assert result == "05 - Resources/05d - Documents", "Documentation should route to Resources/Documents"
 
     def test_url_to_resources_for_microsoft_learn(self):
         """Microsoft Learn URLs should go to Resources."""
@@ -209,7 +209,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05 - Resources", "Microsoft Learn should route to Resources"
+        assert result == "05 - Resources/05d - Documents", "Microsoft Learn should route to Resources/Documents"
 
     def test_url_to_resources_for_python_docs(self):
         """Python documentation should go to Resources."""
@@ -217,7 +217,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05 - Resources", "Python docs should route to Resources"
+        assert result == "05 - Resources/05d - Documents", "Python docs should route to Resources/Documents"
 
     def test_url_to_resources_for_mdn(self):
         """MDN documentation should go to Resources."""
@@ -225,7 +225,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05 - Resources", "MDN should route to Resources"
+        assert result == "05 - Resources/05d - Documents", "MDN should route to Resources/Documents"
 
     def test_url_to_resources_for_aws_docs(self):
         """AWS documentation should go to Resources."""
@@ -233,7 +233,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05 - Resources", "AWS docs should route to Resources"
+        assert result == "05 - Resources/05d - Documents", "AWS docs should route to Resources/Documents"
 
     def test_url_to_resources_for_react_docs(self):
         """React documentation should go to Resources."""
@@ -241,7 +241,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05 - Resources", "React docs should route to Resources"
+        assert result == "05 - Resources/05d - Documents", "React docs should route to Resources/Documents"
 
     def test_url_to_clippings_for_news(self):
         """News articles should go to Clippings."""
@@ -249,7 +249,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05c - Clippings", "News should route to Clippings"
+        assert result == "05 - Resources/05c - Clippings", "News should route to Resources/Clippings"
 
     def test_url_to_clippings_for_blog(self):
         """Blog posts should go to Clippings."""
@@ -257,7 +257,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05c - Clippings", "Blogs should route to Clippings"
+        assert result == "05 - Resources/05c - Clippings", "Blogs should route to Resources/Clippings"
 
     def test_url_to_clippings_for_general_website(self):
         """General websites should go to Clippings."""
@@ -265,7 +265,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="url", content=content)
 
-        assert result == "05c - Clippings", "General websites should route to Clippings"
+        assert result == "05 - Resources/05c - Clippings", "General websites should route to Resources/Clippings"
 
     def test_code_to_resources(self):
         """Code snippets should go to Resources."""
@@ -273,7 +273,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="code", content=content)
 
-        assert result == "05 - Resources", "Code should route to Resources"
+        assert result == "05 - Resources/05e - Examples", "Code should route to Resources/Examples"
 
     def test_thought_to_notes(self):
         """Thoughts should go to Notes."""
@@ -281,7 +281,7 @@ class TestSuggestFolder:
 
         result = self.router.suggest_folder(source_type="thought", content=content)
 
-        assert result == "01 - Notes", "Thoughts should route to Notes"
+        assert result == "01 - Notes/01a - Atomic", "Thoughts should route to Notes/Atomic"
 
 
 class TestEndToEndRouting:
@@ -302,7 +302,7 @@ class TestEndToEndRouting:
         folder = self.router.suggest_folder(source_type, content)
 
         assert source_type == "url"
-        assert folder == "05 - Resources"
+        assert folder == "05 - Resources/05d - Documents"
 
     def test_route_blog_post(self):
         """Complete workflow for blog post."""
@@ -313,7 +313,7 @@ class TestEndToEndRouting:
         folder = self.router.suggest_folder(source_type, content)
 
         assert source_type == "url"
-        assert folder == "05c - Clippings"
+        assert folder == "05 - Resources/05c - Clippings"
 
     def test_route_code_snippet(self):
         """Complete workflow for code snippet."""
@@ -324,7 +324,7 @@ class TestEndToEndRouting:
         folder = self.router.suggest_folder(source_type, content)
 
         assert source_type == "code"
-        assert folder == "05 - Resources"
+        assert folder == "05 - Resources/05e - Examples"
 
     def test_route_thought(self):
         """Complete workflow for general thought."""
@@ -335,22 +335,22 @@ class TestEndToEndRouting:
         folder = self.router.suggest_folder(source_type, content)
 
         assert source_type == "thought"
-        assert folder == "01 - Notes"
+        assert folder == "01 - Notes/01a - Atomic"
 
     def test_accuracy_requirement(self):
         """Verify routing accuracy meets >90% requirement on diverse inputs."""
         test_cases = [
             # (content, title, expected_source, expected_folder)
-            ("https://docs.python.org", "Python Docs", "url", "05 - Resources"),
-            ("https://blog.com/post", "Blog", "url", "05c - Clippings"),
-            ("def test(): pass", "Test Func", "code", "05 - Resources"),
-            ("Random thought", "Idea", "thought", "01 - Notes"),
-            ("Check https://example.com", "Link", "url", "05c - Clippings"),
-            ("```js\nconst x = 1;\n```", "JS Code", "code", "05 - Resources"),
-            ("class MyClass: pass", "Class", "code", "05 - Resources"),
-            ("import pandas", "Import", "code", "05 - Resources"),
-            ("Research vector DBs", "Research", "thought", "01 - Notes"),
-            ("https://learn.microsoft.com/azure", "Azure Docs", "url", "05 - Resources"),
+            ("https://docs.python.org", "Python Docs", "url", "05 - Resources/05d - Documents"),
+            ("https://blog.com/post", "Blog", "url", "05 - Resources/05c - Clippings"),
+            ("def test(): pass", "Test Func", "code", "05 - Resources/05e - Examples"),
+            ("Random thought", "Idea", "thought", "01 - Notes/01a - Atomic"),
+            ("Check https://example.com", "Link", "url", "05 - Resources/05c - Clippings"),
+            ("```js\nconst x = 1;\n```", "JS Code", "code", "05 - Resources/05e - Examples"),
+            ("class MyClass: pass", "Class", "code", "05 - Resources/05e - Examples"),
+            ("import pandas", "Import", "code", "05 - Resources/05e - Examples"),
+            ("Research vector DBs", "Research", "thought", "01 - Notes/01a - Atomic"),
+            ("https://learn.microsoft.com/azure", "Azure Docs", "url", "05 - Resources/05d - Documents"),
         ]
 
         correct_detections = 0

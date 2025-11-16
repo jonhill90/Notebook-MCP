@@ -612,7 +612,7 @@ class TestEdgeCases:
             await vault_manager.create_note(
                 title=f"Resource {i}",
                 content="Content",
-                folder="05 - Resources",
+                folder="05 - Resources/05d - Documents",
                 note_type="resource",
                 tags=["python"],
             )

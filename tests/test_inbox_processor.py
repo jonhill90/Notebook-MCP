@@ -31,18 +31,30 @@ def temp_vault():
     vault_path = Path(temp_dir) / "test_vault"
     vault_path.mkdir()
 
-    # Create folder structure
+    # Create 3-level folder structure
     folders = [
-        "00 - Inbox",
-        "01 - Notes",
+        "00 - Inbox/00a - Active",
+        "00 - Inbox/00b - Backlog",
+        "00 - Inbox/00c - Clippings",
+        "00 - Inbox/00d - Documents",
+        "00 - Inbox/00r - Research",
+        "00 - Inbox/00t - Thoughts",
+        "01 - Notes/01a - Atomic",
+        "01 - Notes/01m - Meetings",
+        "01 - Notes/01r - Research",
         "02 - MOCs",
-        "03 - Projects",
+        "03 - Projects/03b - Personal",
+        "03 - Projects/03c - Work",
+        "03 - Projects/03p - PRPs",
         "04 - Areas",
-        "05 - Resources",
-        "05c - Clippings",
+        "05 - Resources/05c - Clippings",
+        "05 - Resources/05d - Documents",
+        "05 - Resources/05e - Examples",
+        "05 - Resources/05l - Learning",
+        "05 - Resources/05r - Repos",
     ]
     for folder in folders:
-        (vault_path / folder).mkdir()
+        (vault_path / folder).mkdir(parents=True)
 
     yield vault_path
 
@@ -55,11 +67,11 @@ async def vault_with_tags(temp_vault):
     """Create vault with existing notes to build tag vocabulary."""
     manager = VaultManager(str(temp_vault))
 
-    # Create notes with common tags
+    # Create notes with common tags (using 3-level folder paths)
     await manager.create_note(
         title="Python Tutorial",
         content="Python programming basics",
-        folder="01 - Notes",
+        folder="01 - Notes/01a - Atomic",
         note_type="note",
         tags=["python", "programming", "tutorial"],
     )
@@ -67,7 +79,7 @@ async def vault_with_tags(temp_vault):
     await manager.create_note(
         title="JavaScript Guide",
         content="JavaScript web development",
-        folder="01 - Notes",
+        folder="01 - Notes/01a - Atomic",
         note_type="note",
         tags=["javascript", "web-dev", "frontend"],
     )
@@ -75,7 +87,7 @@ async def vault_with_tags(temp_vault):
     await manager.create_note(
         title="React Documentation",
         content="React hooks and components",
-        folder="05 - Resources",
+        folder="05 - Resources/05d - Documents",
         note_type="resource",
         tags=["react", "javascript", "frontend"],
     )
@@ -83,7 +95,7 @@ async def vault_with_tags(temp_vault):
     await manager.create_note(
         title="Machine Learning",
         content="ML algorithms and models",
-        folder="01 - Notes",
+        folder="01 - Notes/01a - Atomic",
         note_type="note",
         tags=["machine-learning", "ai", "python"],
     )
@@ -130,11 +142,11 @@ class TestProcessURLClippings:
         )
 
         assert result["source_type"] == "url"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05d - Documents"
         assert Path(result["file_path"]).exists()
         assert isinstance(result["tags"], list)
 
-        # Verify note was created with correct type (resource for 05 - Resources)
+        # Verify note was created with correct type (resource for 05 - Resources/05d - Documents)
         note_id = Path(result["file_path"]).stem
         note_data = await processor.vault_manager.read_note(note_id)
         assert note_data["frontmatter"]["type"] == "resource"
@@ -150,10 +162,10 @@ class TestProcessURLClippings:
         )
 
         assert result["source_type"] == "url"
-        assert result["folder"] == "05c - Clippings"
+        assert result["folder"] == "05 - Resources/05c - Clippings"
         assert Path(result["file_path"]).exists()
 
-        # Verify note type is 'clipping' for Clippings folder
+        # Verify note type is 'clipping' for Resources/Clippings folder
         note_id = Path(result["file_path"]).stem
         note_data = await processor.vault_manager.read_note(note_id)
         assert note_data["frontmatter"]["type"] == "clipping"
@@ -169,7 +181,7 @@ class TestProcessURLClippings:
         )
 
         assert result["source_type"] == "url"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05d - Documents"
         # Should suggest react tag from vocabulary
         assert "react" in result["tags"] or "javascript" in result["tags"]
 
@@ -184,7 +196,7 @@ class TestProcessURLClippings:
         )
 
         assert result["source_type"] == "url"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05d - Documents"
 
 
 class TestProcessCodeSnippets:
@@ -206,10 +218,10 @@ def calculate_sum(a, b):
         )
 
         assert result["source_type"] == "code"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05e - Examples"
         assert Path(result["file_path"]).exists()
 
-        # Verify note type is 'resource' (for 05 - Resources folder)
+        # Verify note type is 'resource' (for 05 - Resources/05e - Examples folder)
         note_id = Path(result["file_path"]).stem
         note_data = await processor.vault_manager.read_note(note_id)
         assert note_data["frontmatter"]["type"] == "resource"
@@ -225,7 +237,7 @@ def calculate_sum(a, b):
         )
 
         assert result["source_type"] == "code"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05e - Examples"
         # Should suggest python tag from vocabulary
         assert "python" in result["tags"]
 
@@ -240,7 +252,7 @@ def calculate_sum(a, b):
         )
 
         assert result["source_type"] == "code"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05e - Examples"
 
     @pytest.mark.asyncio
     async def test_process_class_definition(self, vault_with_tags):
@@ -253,7 +265,7 @@ def calculate_sum(a, b):
         )
 
         assert result["source_type"] == "code"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05e - Examples"
 
 
 class TestProcessThoughts:
@@ -270,7 +282,7 @@ class TestProcessThoughts:
         )
 
         assert result["source_type"] == "thought"
-        assert result["folder"] == "01 - Notes"
+        assert result["folder"] == "01 - Notes/01a - Atomic"
         assert Path(result["file_path"]).exists()
 
         # Verify note type is 'note'
@@ -295,7 +307,7 @@ class TestProcessThoughts:
         )
 
         assert result["source_type"] == "thought"
-        assert result["folder"] == "01 - Notes"
+        assert result["folder"] == "01 - Notes/01a - Atomic"
 
     @pytest.mark.asyncio
     async def test_process_thought_with_relevant_tags(self, vault_with_tags):
@@ -308,7 +320,7 @@ class TestProcessThoughts:
         )
 
         assert result["source_type"] == "thought"
-        assert result["folder"] == "01 - Notes"
+        assert result["folder"] == "01 - Notes/01a - Atomic"
         # Should suggest python-related tags from vocabulary
         assert "python" in result["tags"] or "programming" in result["tags"]
 
@@ -376,13 +388,13 @@ class TestEndToEndWorkflow:
 
         # Verify all steps completed
         assert result["source_type"] == "url"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05d - Documents"
         assert isinstance(result["tags"], list)
         assert Path(result["file_path"]).exists()
 
         # Verify note was created correctly
         note_path = Path(result["file_path"])
-        assert note_path.parent.name == "05 - Resources"
+        assert "05 - Resources" in str(note_path)
         assert note_path.suffix == ".md"
 
         # Verify note content
@@ -414,10 +426,10 @@ async def process_data(items):
         )
 
         assert result["source_type"] == "code"
-        assert result["folder"] == "05 - Resources"
+        assert result["folder"] == "05 - Resources/05e - Examples"
         assert Path(result["file_path"]).exists()
 
-        # Verify note type is 'resource' (for 05 - Resources folder)
+        # Verify note type is 'resource' (for 05 - Resources/05e - Examples folder)
         note_id = Path(result["file_path"]).stem
         note_data = await processor.vault_manager.read_note(note_id)
         assert note_data["frontmatter"]["type"] == "resource"
@@ -434,7 +446,7 @@ async def process_data(items):
         )
 
         assert result["source_type"] == "thought"
-        assert result["folder"] == "01 - Notes"
+        assert result["folder"] == "01 - Notes/01a - Atomic"
         assert Path(result["file_path"]).exists()
 
         # Verify frontmatter
@@ -497,21 +509,21 @@ class TestAccuracyRequirement:
 
         test_cases = [
             # (title, content, expected_source, expected_folder)
-            ("Python Docs", "https://docs.python.org", "url", "05 - Resources"),
-            ("Blog Post", "https://blog.example.com/post", "url", "05c - Clippings"),
-            ("React Docs", "https://reactjs.org/docs/hooks", "url", "05 - Resources"),
-            ("Code Example", "def hello(): pass", "code", "05 - Resources"),
-            ("JS Code", "const x = 1;", "code", "05 - Resources"),
-            ("Class Def", "class MyClass: pass", "code", "05 - Resources"),
-            ("Thought", "Research vector databases", "thought", "01 - Notes"),
-            ("Idea", "Explore knowledge graphs", "thought", "01 - Notes"),
-            ("MDN", "https://developer.mozilla.org/docs", "url", "05 - Resources"),
-            ("Tutorial", "Learn Python programming", "thought", "01 - Notes"),
-            ("Azure Docs", "https://learn.microsoft.com/azure", "url", "05 - Resources"),
-            ("Import", "import pandas as pd", "code", "05 - Resources"),
-            ("News", "https://news.ycombinator.com/item", "url", "05c - Clippings"),
-            ("Function", "function test() {}", "code", "05 - Resources"),
-            ("Note", "Important meeting notes", "thought", "01 - Notes"),
+            ("Python Docs", "https://docs.python.org", "url", "05 - Resources/05d - Documents"),
+            ("Blog Post", "https://blog.example.com/post", "url", "05 - Resources/05c - Clippings"),
+            ("React Docs", "https://reactjs.org/docs/hooks", "url", "05 - Resources/05d - Documents"),
+            ("Code Example", "def hello(): pass", "code", "05 - Resources/05e - Examples"),
+            ("JS Code", "const x = 1;", "code", "05 - Resources/05e - Examples"),
+            ("Class Def", "class MyClass: pass", "code", "05 - Resources/05e - Examples"),
+            ("Thought", "Research vector databases", "thought", "01 - Notes/01a - Atomic"),
+            ("Idea", "Explore knowledge graphs", "thought", "01 - Notes/01a - Atomic"),
+            ("MDN", "https://developer.mozilla.org/docs", "url", "05 - Resources/05d - Documents"),
+            ("Tutorial", "Learn Python programming", "thought", "01 - Notes/01a - Atomic"),
+            ("Azure Docs", "https://learn.microsoft.com/azure", "url", "05 - Resources/05d - Documents"),
+            ("Import", "import pandas as pd", "code", "05 - Resources/05e - Examples"),
+            ("News", "https://news.ycombinator.com/item", "url", "05 - Resources/05c - Clippings"),
+            ("Function", "function test() {}", "code", "05 - Resources/05e - Examples"),
+            ("Note", "Important meeting notes", "thought", "01 - Notes/01a - Atomic"),
         ]
 
         correct_count = 0
@@ -556,7 +568,7 @@ class TestProcessorUtilities:
         await processor.vault_manager.create_note(
             title="New Topic",
             content="New content",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["new-tag-1", "new-tag-2"]
         )

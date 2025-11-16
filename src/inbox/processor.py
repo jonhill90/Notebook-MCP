@@ -204,20 +204,34 @@ class InboxProcessor:
 
         # Step 4: Determine note type based on folder
         # Folder determines allowed note types (from VaultManager.VALID_FOLDERS)
-        # 00 - Inbox: clipping, thought, todo
-        # 01 - Notes: note, reference
-        # 05 - Resources: resource
-        # 05c - Clippings: clipping (if folder exists)
+        # Map 3-level folder paths to appropriate note types
 
-        # Map folder to appropriate note type
         folder_type_map = {
-            "00 - Inbox": "clipping" if source_type == "url" else "thought",
-            "01 - Notes": "note",
+            # Inbox folders
+            "00 - Inbox/00a - Active": "thought",
+            "00 - Inbox/00b - Backlog": "thought",
+            "00 - Inbox/00c - Clippings": "clipping",
+            "00 - Inbox/00d - Documents": "clipping",
+            "00 - Inbox/00r - Research": "thought",
+            "00 - Inbox/00t - Thoughts": "thought",
+            # Notes folders
+            "01 - Notes/01a - Atomic": "note",
+            "01 - Notes/01m - Meetings": "meeting",
+            "01 - Notes/01r - Research": "research",
+            # MOCs
             "02 - MOCs": "moc",
-            "03 - Projects": "project",
+            # Projects folders
+            "03 - Projects/03b - Personal": "project",
+            "03 - Projects/03c - Work": "project",
+            "03 - Projects/03p - PRPs": "prp",
+            # Areas
             "04 - Areas": "area",
-            "05 - Resources": "resource",
-            "05c - Clippings": "clipping",
+            # Resources folders
+            "05 - Resources/05c - Clippings": "clipping",
+            "05 - Resources/05d - Documents": "resource",
+            "05 - Resources/05e - Examples": "resource",
+            "05 - Resources/05l - Learning": "resource",
+            "05 - Resources/05r - Repos": "resource",
         }
 
         note_type = folder_type_map.get(folder, "note")

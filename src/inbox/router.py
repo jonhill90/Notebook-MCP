@@ -22,7 +22,7 @@ Usage:
 
     # Get folder suggestion
     folder = router.suggest_folder(source_type="url", content="https://docs.python.org")
-    # Returns: "05 - Resources"
+    # Returns: "05 - Resources/05d - Documents"
     ```
 """
 
@@ -38,9 +38,9 @@ class InboxRouter:
     the most appropriate destination folder.
 
     Routing Rules:
-        - URL clippings → "05 - Resources" (or "05c - Clippings" for web pages)
-        - Code snippets → "05 - Resources"
-        - General thoughts → "01 - Notes"
+        - URL clippings → "05 - Resources/05d - Documents" (or "05 - Resources/05c - Clippings" for web pages)
+        - Code snippets → "05 - Resources/05e - Examples"
+        - General thoughts → "01 - Notes/01a - Atomic"
 
     The router achieves >90% accuracy by using pattern matching for URLs and
     code blocks, with sensible defaults for edge cases.
@@ -111,21 +111,21 @@ class InboxRouter:
         """Suggest destination folder based on source type and content.
 
         Routes inbox items to appropriate folders following Second Brain
-        conventions (00-05 directory structure).
+        conventions (3-level directory structure).
 
         Routing Logic:
             - URL clippings:
-                - Documentation sites → "05 - Resources"
-                - General web pages → "05c - Clippings"
-            - Code snippets → "05 - Resources"
-            - Thoughts → "01 - Notes"
+                - Documentation sites → "05 - Resources/05d - Documents"
+                - General web pages → "05 - Resources/05c - Clippings"
+            - Code snippets → "05 - Resources/05e - Examples"
+            - Thoughts → "01 - Notes/01a - Atomic"
 
         Args:
             source_type: Type detected by detect_source_type ("url", "code", "thought")
             content: The content being routed (used for URL domain detection)
 
         Returns:
-            Folder path matching Second Brain structure (e.g., "05 - Resources")
+            3-level folder path matching Second Brain structure (e.g., "05 - Resources/05d - Documents")
 
         Examples:
             ```python
@@ -134,28 +134,28 @@ class InboxRouter:
                 source_type="url",
                 content="https://docs.anthropic.com/claude"
             )
-            # Returns: "05 - Resources"
+            # Returns: "05 - Resources/05d - Documents"
 
             # General web page
             router.suggest_folder(
                 source_type="url",
                 content="https://news.ycombinator.com/item?id=123"
             )
-            # Returns: "05c - Clippings"
+            # Returns: "05 - Resources/05c - Clippings"
 
             # Code snippet
             router.suggest_folder(
                 source_type="code",
                 content="def example(): pass"
             )
-            # Returns: "05 - Resources"
+            # Returns: "05 - Resources/05e - Examples"
 
             # Thought/note
             router.suggest_folder(
                 source_type="thought",
                 content="Interesting idea about knowledge graphs"
             )
-            # Returns: "01 - Notes"
+            # Returns: "01 - Notes/01a - Atomic"
             ```
         """
         # Route URL clippings
@@ -174,16 +174,16 @@ class InboxRouter:
                 "angular.io/docs"
             ]
 
-            # If content matches documentation domain, route to Resources
+            # If content matches documentation domain, route to Resources/Documents
             if any(domain in content for domain in documentation_domains):
-                return "05 - Resources"
+                return "05 - Resources/05d - Documents"
 
-            # General web pages go to Clippings
-            return "05c - Clippings"
+            # General web pages go to Resources/Clippings
+            return "05 - Resources/05c - Clippings"
 
-        # Route code snippets to Resources
+        # Route code snippets to Resources/Examples
         if source_type == "code":
-            return "05 - Resources"
+            return "05 - Resources/05e - Examples"
 
-        # Route thoughts to Notes (default)
-        return "01 - Notes"
+        # Route thoughts to Notes/Atomic (default)
+        return "01 - Notes/01a - Atomic"
