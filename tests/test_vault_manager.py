@@ -247,9 +247,13 @@ class TestCreateNote:
         metadata = post.metadata
 
         assert len(metadata['id']) == 14
-        assert metadata['type'] == "note"
-        assert metadata['tags'] == ["test", "example"]
-        assert metadata['permalink'] == "test-note"
+        assert metadata['type'] == "Note"
+        # Check user tags (VaultManager auto-adds month tag)
+        assert "test" in metadata['tags']
+        assert "example" in metadata['tags']
+        # Permalink now uses full path format (Session 6 change)
+        assert "01-notes/01a-atomic" in metadata['permalink']
+        assert metadata['id'] in metadata['permalink']
         assert 'created' in metadata
         assert 'updated' in metadata
 
@@ -290,15 +294,24 @@ class TestCreateNote:
 
     @pytest.mark.asyncio
     async def test_create_note_with_status(self, vault_manager, temp_vault):
-        """Test creating note with status field."""
+        """Test creating note and updating status with update_note."""
         file_path = await vault_manager.create_note(
             title="Project Note",
             content="Project content",
             folder="03 - Projects/03b - Personal",
             note_type="project",
             tags=["project"],
+        )
+
+        note_id = file_path.stem
+
+        # Update note with status field
+        success = await vault_manager.update_note(
+            note_id=note_id,
             status="in-progress",
         )
+
+        assert success is True
 
         post = frontmatter.load(file_path)
         assert post.metadata['status'] == "in-progress"
@@ -436,9 +449,14 @@ class TestUpdateNote:
             folder="03 - Projects/03b - Personal",
             note_type="project",
             tags=["project"],
-            status="planning",
         )
         note_id = file_path.stem
+
+        # Add initial status
+        await vault_manager.update_note(
+            note_id=note_id,
+            status="planning",
+        )
 
         # Update status
         success = await vault_manager.update_note(
@@ -576,7 +594,7 @@ class TestListNotes:
         # List only Notes folder
         notes = await vault_manager.list_notes(folder="01 - Notes/01a - Atomic")
         assert len(notes) == 1
-        assert notes[0]['type'] == "note"
+        assert notes[0]['type'] == "Note"
 
     @pytest.mark.asyncio
     async def test_list_notes_by_type(self, vault_manager, temp_vault):
@@ -593,9 +611,9 @@ class TestListNotes:
         )
 
         # List only note type
-        notes = await vault_manager.list_notes(note_type="note")
+        notes = await vault_manager.list_notes(note_type="Note")
         assert len(notes) == 2
-        assert all(n['type'] == "note" for n in notes)
+        assert all(n['type'] == "Note" for n in notes)
 
     @pytest.mark.asyncio
     async def test_list_notes_by_tag(self, vault_manager, temp_vault):

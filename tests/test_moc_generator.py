@@ -124,7 +124,7 @@ class TestFindClusters:
 
         clusters = moc_generator.find_clusters()
 
-        # Should not return cluster below threshold
+        # python tag is below threshold, but month tag (on 11 notes) is below too
         assert len(clusters) == 0
 
     @pytest.mark.asyncio
@@ -142,11 +142,11 @@ class TestFindClusters:
 
         clusters = moc_generator.find_clusters()
 
-        # Should return cluster at threshold
-        assert len(clusters) == 1
-        assert clusters[0].tag == "python"
-        assert clusters[0].note_count == 12
-        assert clusters[0].should_create_moc is True
+        # Should return 2 clusters: python (12) + month tag (12)
+        assert len(clusters) == 2
+        python_cluster = [c for c in clusters if c.tag == "python"][0]
+        assert python_cluster.note_count == 12
+        assert python_cluster.should_create_moc is True
 
     @pytest.mark.asyncio
     async def test_find_clusters_above_threshold(self, vault_manager, moc_generator):
@@ -163,11 +163,11 @@ class TestFindClusters:
 
         clusters = moc_generator.find_clusters()
 
-        # Should return cluster above threshold
-        assert len(clusters) == 1
-        assert clusters[0].tag == "python"
-        assert clusters[0].note_count == 15
-        assert clusters[0].should_create_moc is True
+        # Should return 2 clusters: python (15) + month tag (15)
+        assert len(clusters) == 2
+        python_cluster = [c for c in clusters if c.tag == "python"][0]
+        assert python_cluster.note_count == 15
+        assert python_cluster.should_create_moc is True
 
     @pytest.mark.asyncio
     async def test_find_multiple_clusters(self, vault_manager, moc_generator):
@@ -204,8 +204,8 @@ class TestFindClusters:
 
         clusters = moc_generator.find_clusters()
 
-        # Should return 2 clusters (python and javascript, not rust)
-        assert len(clusters) == 2
+        # Should return 3 clusters (python, javascript, and month tag - 37 total notes)
+        assert len(clusters) == 3
 
         tags = {c.tag for c in clusters}
         assert "python" in tags
@@ -234,16 +234,18 @@ class TestFindClusters:
 
         clusters = moc_generator.find_clusters()
 
-        # Both tags should have clusters
-        assert len(clusters) == 2
+        # Should find 3 clusters: python (12), web-dev (12), and month tag (12)
+        assert len(clusters) == 3
 
         tags = {c.tag for c in clusters}
         assert "python" in tags
         assert "web-dev" in tags
 
-        # Both should have 12 notes
-        for cluster in clusters:
-            assert cluster.note_count == 12
+        # All three should have 12 notes
+        python_cluster = [c for c in clusters if c.tag == "python"][0]
+        webdev_cluster = [c for c in clusters if c.tag == "web-dev"][0]
+        assert python_cluster.note_count == 12
+        assert webdev_cluster.note_count == 12
 
     @pytest.mark.asyncio
     async def test_find_clusters_ignores_notes_without_tags(self, vault_manager, moc_generator, temp_vault):
@@ -266,9 +268,11 @@ class TestFindClusters:
 
         clusters = moc_generator.find_clusters()
 
-        # Should still find python cluster with 12 notes (not affected by bad note)
-        assert len(clusters) == 1
-        assert clusters[0].note_count == 12
+        # Should find 2 clusters: python (12) + month tag (12)
+        # Bad note without tags is ignored
+        assert len(clusters) == 2
+        python_cluster = [c for c in clusters if c.tag == "python"][0]
+        assert python_cluster.note_count == 12
 
 
 class TestCreateMOC:
@@ -291,9 +295,10 @@ class TestCreateMOC:
 
         # Find cluster
         clusters = moc_generator.find_clusters()
-        assert len(clusters) == 1
+        assert len(clusters) == 2  # python + month tag
 
-        cluster = clusters[0]
+        # Get python cluster
+        cluster = [c for c in clusters if c.tag == "python"][0]
 
         # Create MOC
         moc_path = await moc_generator.create_moc(cluster)
@@ -308,10 +313,12 @@ class TestCreateMOC:
         post = frontmatter.load(moc_path)
         metadata = post.metadata
 
-        assert metadata['type'] == "moc"
+        assert metadata['type'] == "MOC"
         assert "python" in metadata['tags']
         assert "moc" in metadata['tags']
-        assert metadata['permalink'] == "python-moc"
+        # Permalink now uses full path format (Session 6 change)
+        assert "02-mocs" in metadata['permalink']
+        assert metadata['id'] in metadata['permalink']
 
         # Verify MOC content
         content = post.content
@@ -539,8 +546,9 @@ class TestCreateAllNeededMOCs:
 
         moc_paths = await moc_generator.create_all_needed_mocs()
 
-        # Should create 2 MOCs (python and javascript, not rust)
-        assert len(moc_paths) == 2
+        # Should create 3 MOCs (python, javascript, and auto-added month tag - total 35 notes)
+        # Month tag appears on all 35 notes, exceeding threshold
+        assert len(moc_paths) == 3
 
         # Verify both exist
         for moc_path in moc_paths:
@@ -562,8 +570,8 @@ class TestCreateAllNeededMOCs:
 
         moc_paths = await moc_generator.create_all_needed_mocs(dry_run=True)
 
-        # Should return paths
-        assert len(moc_paths) == 1
+        # Should return paths (python tag + auto-added month tag on 12 notes)
+        assert len(moc_paths) == 2
 
         # But files should NOT exist
         for moc_path in moc_paths:
@@ -591,9 +599,11 @@ class TestEdgeCases:
 
         clusters = generator.find_clusters()
 
-        # Should find cluster with custom threshold
-        assert len(clusters) == 1
-        assert clusters[0].note_count == 6
+        # Should find 2 clusters (python tag + auto-added month tag on 6 notes)
+        assert len(clusters) == 2
+        # One cluster should be python with 6 notes
+        python_cluster = [c for c in clusters if c.tag == "python"][0]
+        assert python_cluster.note_count == 6
 
     @pytest.mark.asyncio
     async def test_notes_across_folders(self, vault_manager, moc_generator):
@@ -619,6 +629,8 @@ class TestEdgeCases:
 
         clusters = moc_generator.find_clusters()
 
-        # Should combine notes from both folders (6 + 7 = 13)
-        assert len(clusters) == 1
-        assert clusters[0].note_count == 13
+        # Should find 2 clusters: python (6 + 7 = 13) + auto-added month tag (13 notes)
+        assert len(clusters) == 2
+        # Python cluster should have combined notes from both folders
+        python_cluster = [c for c in clusters if c.tag == "python"][0]
+        assert python_cluster.note_count == 13

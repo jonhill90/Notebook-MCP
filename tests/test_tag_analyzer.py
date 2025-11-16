@@ -27,17 +27,20 @@ def temp_vault():
     vault_path = Path(temp_dir) / "test_vault"
     vault_path.mkdir()
 
-    # Create folder structure
+    # Create 3-level folder structure per VALID_FOLDERS
     folders = [
-        "00 - Inbox",
-        "01 - Notes",
+        "00 - Inbox/00a - Active",
+        "00 - Inbox/00r - Research",
+        "00 - Inbox/00t - Thoughts",
+        "01 - Notes/01a - Atomic",
+        "01 - Notes/01r - Research",
         "02 - MOCs",
-        "03 - Projects",
+        "03 - Projects/03b - Personal",
         "04 - Areas",
-        "05 - Resources",
+        "05 - Resources/05c - Clippings",
     ]
     for folder in folders:
-        (vault_path / folder).mkdir()
+        (vault_path / folder).mkdir(parents=True)
 
     yield vault_path
 
@@ -50,11 +53,11 @@ async def vault_with_notes(temp_vault):
     """Create a vault with sample notes for testing."""
     manager = VaultManager(str(temp_vault))
 
-    # Create notes with various tags
+    # Create notes with various tags (using 3-level folder paths)
     await manager.create_note(
         title="Python Basics",
         content="Introduction to Python programming language",
-        folder="01 - Notes",
+        folder="01 - Notes/01r - Research",
         note_type="note",
         tags=["python", "programming", "tutorial"],
     )
@@ -62,7 +65,7 @@ async def vault_with_notes(temp_vault):
     await manager.create_note(
         title="Machine Learning",
         content="ML algorithms and applications in Python",
-        folder="01 - Notes",
+        folder="01 - Notes/01r - Research",
         note_type="note",
         tags=["machine-learning", "python", "ai"],
     )
@@ -70,7 +73,7 @@ async def vault_with_notes(temp_vault):
     await manager.create_note(
         title="Web Development",
         content="Building web applications with modern frameworks",
-        folder="01 - Notes",
+        folder="01 - Notes/01a - Atomic",
         note_type="note",
         tags=["web-dev", "javascript", "frontend"],
     )
@@ -78,7 +81,7 @@ async def vault_with_notes(temp_vault):
     await manager.create_note(
         title="Data Science",
         content="Data analysis and visualization techniques",
-        folder="01 - Notes",
+        folder="01 - Notes/01a - Atomic",
         note_type="note",
         tags=["data-science", "python", "analytics"],
     )
@@ -110,13 +113,17 @@ class TestTagAnalyzerInitialization:
         """Test that vocabulary is built from vault notes."""
         analyzer = TagAnalyzer(str(vault_with_notes))
 
-        # Should have collected all unique tags
+        # Should have collected all unique tags (including auto-added month tag)
+        from datetime import datetime
+        month_tag = datetime.now().strftime("%m-%Y")
+
         expected_tags = {
             "python", "programming", "tutorial",
             "machine-learning", "ai",
             "web-dev", "javascript", "frontend",
             "data-science", "analytics",
-            "algorithms", "computer-science", "moc"
+            "algorithms", "computer-science", "moc",
+            month_tag  # Auto-added by VaultManager
         }
 
         assert analyzer.tag_vocabulary == expected_tags
@@ -154,7 +161,7 @@ class TestVocabularyMethods:
 
         stats = analyzer.get_vocabulary_stats()
 
-        assert stats['total_tags'] == 13  # 13 unique tags
+        assert stats['total_tags'] == 14  # 13 unique tags + 1 auto-added month tag
         assert stats['avg_tag_length'] > 0
         assert stats['multi_word_tags'] > 0  # Has hyphenated tags
 
@@ -179,7 +186,7 @@ class TestVocabularyMethods:
         await manager.create_note(
             title="New Topic",
             content="New content",
-            folder="01 - Notes",
+            folder="01 - Notes/01a - Atomic",
             note_type="note",
             tags=["new-tag", "another-tag"],
         )
