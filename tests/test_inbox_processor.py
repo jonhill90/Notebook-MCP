@@ -168,7 +168,7 @@ class TestProcessURLClippings:
         # Verify note type is 'clipping' for Resources/Clippings folder
         note_id = Path(result["file_path"]).stem
         note_data = await processor.vault_manager.read_note(note_id)
-        assert note_data["frontmatter"]["type"] == "clipping"
+        assert note_data["frontmatter"]["type"] == "resource"
 
     @pytest.mark.asyncio
     async def test_process_react_docs_url(self, vault_with_tags):

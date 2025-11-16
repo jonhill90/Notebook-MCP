@@ -89,6 +89,21 @@ class VaultManager:
         "05 - Resources/05v - Video": ["clipping"],
     }
 
+    # Type display names for frontmatter (capitalized per templates)
+    TYPE_DISPLAY_NAMES = {
+        "note": "Note",
+        "research": "Research",
+        "meeting": "Meeting",
+        "thought": "Thought",
+        "moc": "Map of Content",
+        "project": "Project",
+        "area": "Area",
+        "resource": "resource",  # Lowercase per process-clipping template
+        "clipping": "resource",  # Clippings use "resource" type
+        "todo": "Todo",
+        "prp": "PRP",
+    }
+
     def __init__(self, vault_path: str):
         """Initialize the VaultManager.
 
@@ -136,7 +151,7 @@ class VaultManager:
         Example:
             >>> manager = VaultManager("/vault")
             >>> unique_id = await manager.generate_unique_id()
-            '20251114020001'  # Guaranteed unique
+            '20251114020000'  # Guaranteed unique
         """
         while True:
             note_id = self.generate_id()
@@ -248,25 +263,23 @@ class VaultManager:
         note_type: str,
         tags: list[str],
         dry_run: bool = False,
-        status: Optional[str] = None,
     ) -> Path:
         """Create a new note with convention enforcement.
 
         This is the primary method for creating notes. It:
         1. Validates folder/type combination
-        2. Generates unique ID
-        3. Normalizes tags and permalink
-        4. Creates frontmatter
+        2. Generates unique ID (14-char YYYYMMDDHHmmss)
+        3. Normalizes tags and auto-adds month tag
+        4. Creates frontmatter with proper display names
         5. Writes file to vault
 
         Args:
             title: Note title (will be converted to permalink)
             content: Note content (markdown)
-            folder: Target folder (e.g., "01 - Notes")
-            note_type: Note type (e.g., "note", "moc")
-            tags: List of tags (will be normalized)
+            folder: Target folder (e.g., "01 - Notes/01a - Atomic")
+            note_type: Note type (e.g., "note", "research", "meeting")
+            tags: List of tags (will be normalized, month tag auto-added)
             dry_run: If True, returns preview without creating file (default: False)
-            status: Optional status for projects/tasks
 
         Returns:
             Path to created note file
@@ -279,12 +292,12 @@ class VaultManager:
             >>> path = await manager.create_note(
             ...     title="Python Best Practices",
             ...     content="# Python Best Practices\\n\\n...",
-            ...     folder="01 - Notes",
+            ...     folder="01 - Notes/01a - Atomic",
             ...     note_type="note",
-            ...     tags=["Python", "Best Practices"]  # Will be normalized
+            ...     tags=["python", "best-practices"]
             ... )
             >>> print(path)
-            /vault/01 - Notes/20251114020000.md
+            /vault/01 - Notes/01a - Atomic/20251114020000.md
         """
         # Validate folder/type combination
         self.validate_folder_type(folder, note_type)
@@ -295,22 +308,32 @@ class VaultManager:
         # Normalize tags
         normalized_tags = [self.normalize_tag(tag) for tag in tags]
 
-        # Generate permalink from title
-        permalink = self.normalize_permalink(title)
+        # Auto-add month tag (MM-YYYY format)
+        month_tag = datetime.now().strftime("%m-%Y")
+        if month_tag not in normalized_tags:
+            normalized_tags.append(month_tag)
 
-        # Create timestamps
-        now = datetime.now().isoformat()
+        # Generate permalink with full path (folder/id)
+        # Convert folder path to lowercase-hyphenated format for permalink
+        # Handle spaces around hyphens: "01 - Notes" -> "01-notes"
+        folder_permalink = folder.lower().replace(" - ", "-").replace(" ", "-")
+        permalink = f"{folder_permalink}/{note_id}"
+
+        # Create simple date format (YYYY-MM-DD)
+        today = datetime.now().strftime("%Y-%m-%d")
+
+        # Get display name for type (capitalized per templates)
+        type_display = self.TYPE_DISPLAY_NAMES.get(note_type, note_type.title())
 
         # Create frontmatter model (validates conventions)
         try:
             fm = NoteFrontmatter(
                 id=note_id,
-                type=cast(Literal["note", "moc", "project", "area", "resource", "clipping"], note_type),
+                type=type_display,
                 tags=normalized_tags,
-                created=now,
-                updated=now,
+                created=today,
+                updated=today,
                 permalink=permalink,
-                status=status,
             )
         except Exception as e:
             raise ValueError(f"Frontmatter validation failed: {e}")

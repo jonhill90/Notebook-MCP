@@ -17,22 +17,21 @@ class NoteFrontmatter(BaseModel):
     """Enforces Second Brain frontmatter conventions.
 
     This model validates that note frontmatter follows all required conventions:
-    - id: Must be 14-digit YYYYMMDDHHmmss format
-    - type: Must be one of the valid note types
+    - id: Must be 14-digit YYYYMMDDHHmmss format (prevents agent collision)
+    - type: Display name (e.g., "Note", "Research", "Meeting")
     - tags: Must be lowercase-hyphenated (no spaces, underscores, or uppercase)
-    - permalink: Must be lowercase-hyphenated
-    - created/updated: ISO 8601 datetime strings
-    - status: Optional field for projects/tasks
+    - permalink: Full path format (e.g., "01-notes/01r-research/20251114020000")
+    - created/updated: Simple YYYY-MM-DD date strings
 
     Example:
         ```python
         frontmatter = NoteFrontmatter(
             id="20251114020000",
-            type="note",
-            tags=["knowledge-management", "python"],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
-            permalink="example-note"
+            type="Research",
+            tags=["knowledge-management", "python", "11-2025"],
+            created="2025-11-14",
+            updated="2025-11-14",
+            permalink="01-notes/01r-research/20251114020000"
         )
         ```
 
@@ -41,14 +40,11 @@ class NoteFrontmatter(BaseModel):
     """
 
     id: str = Field(pattern=r'^\d{14}$', description="14-char YYYYMMDDHHmmss timestamp")
-    type: Literal["note", "moc", "project", "area", "resource", "clipping"] = Field(
-        description="Note type determines folder placement"
-    )
+    type: str = Field(description="Note type display name (capitalized, e.g., 'Research', 'Note')")
     tags: list[str] = Field(description="lowercase-hyphenated tags only")
-    created: str = Field(description="ISO 8601 datetime string")
-    updated: str = Field(description="ISO 8601 datetime string")
-    permalink: str = Field(description="lowercase-hyphenated slug for linking")
-    status: Optional[str] = Field(default=None, description="Optional status for projects/tasks")
+    created: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$', description="Simple YYYY-MM-DD date")
+    updated: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$', description="Simple YYYY-MM-DD date")
+    permalink: str = Field(description="Full path format (folder/id)")
 
     @field_validator('tags')
     @classmethod
@@ -79,11 +75,11 @@ class NoteFrontmatter(BaseModel):
     @field_validator('permalink')
     @classmethod
     def validate_permalink(cls, v: str) -> str:
-        """Validate that permalink is lowercase-hyphenated.
+        """Validate that permalink is in full path format.
 
-        Permalink must match pattern: ^[a-z0-9-]+$
-        - Only lowercase letters, numbers, and hyphens
-        - No spaces, underscores, or uppercase letters
+        Permalink must match pattern: folder/subfolder/id
+        - Format: lowercase-hyphenated-path/id
+        - Example: 01-notes/01r-research/202511151846
 
         Args:
             v: Permalink to validate
@@ -94,10 +90,10 @@ class NoteFrontmatter(BaseModel):
         Raises:
             ValueError: If permalink doesn't match pattern
         """
-        if not re.match(r'^[a-z0-9-]+$', v):
+        if not re.match(r'^[a-z0-9-/]+$', v):
             raise ValueError(
-                f"Permalink '{v}' must be lowercase-hyphenated. "
-                f"Only lowercase letters, numbers, and hyphens allowed."
+                f"Permalink '{v}' must be lowercase-hyphenated path format. "
+                f"Only lowercase letters, numbers, hyphens, and slashes allowed."
             )
         return v
 

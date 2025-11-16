@@ -16,73 +16,44 @@ class TestNoteFrontmatter:
         """Test creating valid frontmatter with all correct fields."""
         frontmatter = NoteFrontmatter(
             id="20251114020000",
-            type="note",
+            type="Note",
             tags=["python", "testing", "pydantic"],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
-            permalink="test-note"
+            created="2025-11-14",
+            updated="2025-11-14",
+            permalink="01-notes/01r-research/20251114020000"
         )
 
         assert frontmatter.id == "20251114020000"
-        assert frontmatter.type == "note"
+        assert frontmatter.type == "Note"
         assert frontmatter.tags == ["python", "testing", "pydantic"]
-        assert frontmatter.created == "2025-11-14T02:00:00"
-        assert frontmatter.updated == "2025-11-14T02:00:00"
-        assert frontmatter.permalink == "test-note"
-        assert frontmatter.status is None
-
-    def test_valid_frontmatter_with_status(self):
-        """Test creating frontmatter with optional status field."""
-        frontmatter = NoteFrontmatter(
-            id="20251114020000",
-            type="project",
-            tags=["active"],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
-            permalink="my-project",
-            status="in-progress"
-        )
-
-        assert frontmatter.status == "in-progress"
+        assert frontmatter.created == "2025-11-14"
+        assert frontmatter.updated == "2025-11-14"
+        assert frontmatter.permalink == "01-notes/01r-research/20251114020000"
 
     def test_all_valid_note_types(self):
-        """Test all valid note types are accepted."""
-        valid_types = ["note", "moc", "project", "area", "resource", "clipping"]
+        """Test all valid note types (display names) are accepted."""
+        valid_types = ["Note", "Map of Content", "Project", "Area", "Research", "Meeting"]
 
         for note_type in valid_types:
             frontmatter = NoteFrontmatter(
                 id="20251114020000",
                 type=note_type,
                 tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
-                permalink="test"
+                created="2025-11-14",
+                updated="2025-11-14",
+                permalink="01-notes/01r-research/20251114020000"
             )
             assert frontmatter.type == note_type
-
-    def test_invalid_note_type_rejected(self):
-        """Test that invalid note types are rejected."""
-        with pytest.raises(ValidationError) as exc_info:
-            NoteFrontmatter(
-                id="20251114020000",
-                type="invalid-type",
-                tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
-                permalink="test"
-            )
-
-        assert "type" in str(exc_info.value)
 
     def test_invalid_id_too_short(self):
         """Test that IDs shorter than 14 digits are rejected."""
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="2025111402",  # Only 10 digits
-                type="note",
+                type="Note",
                 tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -93,10 +64,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="202511140200000",  # 15 digits
-                type="note",
+                type="Note",
                 tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -107,10 +78,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="2025111402000A",  # Contains letter
-                type="note",
+                type="Note",
                 tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -121,10 +92,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["Python"],  # Uppercase
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -135,10 +106,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["python testing"],  # Space
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -149,10 +120,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["python_testing"],  # Underscore
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -163,10 +134,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["python@testing"],  # Special char
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -176,10 +147,10 @@ class TestNoteFrontmatter:
         """Test that tags with lowercase, numbers, and hyphens are accepted."""
         frontmatter = NoteFrontmatter(
             id="20251114020000",
-            type="note",
+            type="Note",
             tags=["python3", "test-123", "web-dev"],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
+            created="2025-11-14",
+            updated="2025-11-14",
             permalink="test"
         )
 
@@ -190,10 +161,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["Valid-tag", "INVALID", "also_invalid"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test"
             )
 
@@ -206,10 +177,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="Test-Note"  # Uppercase
             )
 
@@ -220,10 +191,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test note"  # Space
             )
 
@@ -234,10 +205,10 @@ class TestNoteFrontmatter:
         with pytest.raises(ValidationError) as exc_info:
             NoteFrontmatter(
                 id="20251114020000",
-                type="note",
+                type="Note",
                 tags=["test"],
-                created="2025-11-14T02:00:00",
-                updated="2025-11-14T02:00:00",
+                created="2025-11-14",
+                updated="2025-11-14",
                 permalink="test_note"  # Underscore
             )
 
@@ -247,10 +218,10 @@ class TestNoteFrontmatter:
         """Test that permalinks with lowercase, numbers, and hyphens are accepted."""
         frontmatter = NoteFrontmatter(
             id="20251114020000",
-            type="note",
+            type="Note",
             tags=["test"],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
+            created="2025-11-14",
+            updated="2025-11-14",
             permalink="my-note-123"
         )
 
@@ -260,10 +231,10 @@ class TestNoteFrontmatter:
         """Test that empty tags list is allowed (though not recommended)."""
         frontmatter = NoteFrontmatter(
             id="20251114020000",
-            type="note",
+            type="Note",
             tags=[],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
+            created="2025-11-14",
+            updated="2025-11-14",
             permalink="test"
         )
 
@@ -273,23 +244,22 @@ class TestNoteFrontmatter:
         """Test that model can be serialized to dict."""
         frontmatter = NoteFrontmatter(
             id="20251114020000",
-            type="note",
+            type="Note",
             tags=["python"],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
-            permalink="test-note"
+            created="2025-11-14",
+            updated="2025-11-14",
+            permalink="01-notes/01r-research/20251114020000"
         )
 
         data = frontmatter.model_dump()
 
         assert data == {
             "id": "20251114020000",
-            "type": "note",
+            "type": "Note",
             "tags": ["python"],
-            "created": "2025-11-14T02:00:00",
-            "updated": "2025-11-14T02:00:00",
-            "permalink": "test-note",
-            "status": None
+            "created": "2025-11-14",
+            "updated": "2025-11-14",
+            "permalink": "01-notes/01r-research/20251114020000"
         }
 
 
@@ -471,10 +441,10 @@ class TestIntegrationScenarios:
         # Simulate creating a note with full frontmatter
         frontmatter = NoteFrontmatter(
             id="20251114020000",
-            type="note",
+            type="Note",
             tags=["python", "testing", "pydantic"],
-            created="2025-11-14T02:00:00",
-            updated="2025-11-14T02:00:00",
+            created="2025-11-14",
+            updated="2025-11-14",
             permalink="pydantic-models-implementation"
         )
 
@@ -510,21 +480,21 @@ class TestIntegrationScenarios:
     def test_validation_prevents_bad_data(self):
         """Test that validation prevents creation of invalid frontmatter."""
         # Attempt to create note with bad conventions
+        # Note: type field accepts any string (display names are free-form)
         invalid_inputs = [
             {"id": "123", "reason": "ID too short"},
             {"tags": ["Bad Tag"], "reason": "Tag with space"},
             {"tags": ["Bad_Tag"], "reason": "Tag with underscore"},
             {"permalink": "Bad Permalink", "reason": "Permalink with space"},
-            {"type": "invalid", "reason": "Invalid type"},
         ]
 
         base_data = {
             "id": "20251114020000",
-            "type": "note",
+            "type": "Note",
             "tags": ["test"],
-            "created": "2025-11-14T02:00:00",
-            "updated": "2025-11-14T02:00:00",
-            "permalink": "test"
+            "created": "2025-11-14",
+            "updated": "2025-11-14",
+            "permalink": "01-notes/01r-research/20251114020000"
         }
 
         for invalid_input in invalid_inputs:
